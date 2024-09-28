@@ -39,7 +39,7 @@ class LoginSerializer(serializers.Serializer):
         user = auth.authenticate(username=data["username"], password=data["password"])
 
         if user is None:
-            return {"message": "Invalid Credentials.", "data": {}}
+            return {"message": "Invalid username or password.", "data": {}}
 
         refresh = tokens.RefreshToken.for_user(user)
         return {

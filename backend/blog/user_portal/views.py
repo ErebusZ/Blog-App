@@ -34,7 +34,7 @@ class LoginView(generics.GenericAPIView):
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        auth_response = serializer.get_token(request.data)
+        auth_response = serializer.get_token(serializer.data)
 
         return response.Response(
             auth_response,

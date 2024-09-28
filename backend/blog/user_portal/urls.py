@@ -1,12 +1,9 @@
-from django.urls import path
-#     TokenObtainPairView,
-#     TokenRefreshView,
-# )
+from django import urls
 
 from user_portal import views
 
 
 urlpatterns = [
-    path("signup/", views.RegistrationView.as_view(), name="signup"),
-    path("login/", views.LoginView.as_view(), name="signup"),
+    urls.path("signup/", views.RegistrationView.as_view(), name="signup"),
+    urls.path("login/", views.LoginView.as_view(), name="signup"),
 ]

@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework import response
 from rest_framework import views
 from rest_framework import generics
+from rest_framework import exceptions
 
 
 from user_portal import serializers
@@ -34,7 +35,10 @@ class LoginView(generics.GenericAPIView):
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
 
-        auth_response = serializer.get_token(serializer.data)
+        try:
+            auth_response = serializer.get_token(serializer.data)
+        except exceptions.ValidationError as e:
+            return response.Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
         return response.Response(
             auth_response,

@@ -1,0 +1,71 @@
+services:
+  backend_db:
+    image: postgres
+    environment:
+      POSTGRES_DB: ${SETTINGS_DB_NAME}
+      POSTGRES_USER: ${SETTINGS_DB_USER}
+      POSTGRES_PASSWORD: ${SETTINGS_DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - backend_postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - backend_db
+    environment:
+      SETTINGS_DB_NAME: ${SETTINGS_DB_NAME}
+      SETTINGS_DB_USER: ${SETTINGS_DB_USER}
+      SETTINGS_DB_PASSWORD: ${SETTINGS_DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+
+  comments_db:
+    image: postgres
+    environment:
+      POSTGRES_DB: ${COMMENTS_DB_NAME}
+      POSTGRES_USER: ${COMMENTS_DB_USER}
+      POSTGRES_PASSWORD: ${COMMENTS_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - comments_postgres_data:/var/lib/postgresql/data
+
+  comments_service:
+    build:
+      context: ./comments_service
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./comments_service:/code
+    ports:
+      - "8001:8000"
+    depends_on:
+      - comments_db
+    environment:
+      DB_NAME: ${COMMENTS_DB_NAME}
+      DB_USER: ${COMMENTS_DB_USER}
+      DB_PASS: ${COMMENTS_DB_PASSWORD}
+      DB_HOST: comments_db
+      DB_PORT: 5432
+
+  blog_frontend:
+    build:
+      context: ./blog-frontend
+    command: npm run dev -- --host
+    volumes:
+      - ./blog-frontend:/app
+    ports:
+      - "5173:5173"
+    stdin_open: true
+    tty: true
+
+volumes:
+  backend_postgres_data:
+  comments_postgres_data:

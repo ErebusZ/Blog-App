@@ -25,6 +25,7 @@
       <button type="submit">Register</button>
     </form>
     <p v-if="error">{{ error }}</p>
+    <p>Already have an account? <router-link to="/login">Log in here</router-link></p>
   </div>
 </template>
 

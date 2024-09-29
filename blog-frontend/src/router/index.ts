@@ -5,6 +5,7 @@ import Register from '@/views/RegisterView.vue';
 import Login from '@/views/LoginView.vue';
 import BlogPost from '@/views/BlogPostView.vue';
 import CreateEditPost from '@/views/CreateEditPostView.vue';
+import { useAuthStore } from '@/stores/auth';
 
 
 const routes: Array<RouteRecordRaw> = [
@@ -47,5 +48,13 @@ const router = createRouter({
   routes : routes,
 });
 
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  if (to.matched.some(record => record.meta.requiresAuth) && !authStore.isAuthenticated()) {
+    next({ name: 'Login' });
+  } else {
+    next();
+  }
+});
 
 export default router;

@@ -43,5 +43,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  return { user, registerUser, loginUser };
+  const clearToken = () => {
+    token.value = null;
+    user.value = null;
+    localStorage.removeItem('token');
+  };
+
+  const logout = () => {
+    clearToken();
+  };
+
+  const isAuthenticated = () => !!token.value;
+
+  return { user, registerUser, loginUser, logout, isAuthenticated };
 });

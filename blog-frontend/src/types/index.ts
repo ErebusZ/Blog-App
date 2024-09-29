@@ -16,7 +16,7 @@ updated_at: string;
 export interface Comment {
 id: number;
 content: string;
-author: User;
-blog_post: number;
+author_id: number;
+blog_id: number;
 created_at: string;
 }

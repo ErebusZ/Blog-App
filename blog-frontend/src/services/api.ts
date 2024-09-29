@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const CORE_API_URL = 'https://Core-api.com';
-const COMMENT_API_URL = 'https://comments-api.com';
+const CORE_API_URL = import.meta.env.VITE_CORE_API_URL;
+const COMMENT_API_URL = import.meta.env.VITE_COMMENT_API_URL;
 
 const coreApi = axios.create({
   baseURL: CORE_API_URL,

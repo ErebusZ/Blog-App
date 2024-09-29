@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 
-
 from app.api import db
 
 db.metadata.create_all(db.engine)

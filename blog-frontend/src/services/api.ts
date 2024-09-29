@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const CORE_API_URL = 'https://Core-api.com';
+const COMMENT_API_URL = 'https://comments-api.com';
 
 const coreApi = axios.create({
   baseURL: CORE_API_URL,
@@ -35,3 +36,29 @@ export const updateBlogPost = (id: number, data: Partial<BlogPost>) =>
 export const deleteBlogPost = (id: number) => 
     coreApi.delete(`/posts/${id}/`);
 
+const commentApi = axios.create({
+  baseURL: COMMENT_API_URL,
+});
+
+commentApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const getCommentsByPost = (postId: number, page = 1) => 
+    commentApi.get('/comments/', { params: { post_id: postId, page } });
+
+export const getCommentsByUser = (userId: number, page = 1) => 
+    commentApi.get('/comments/', { params: { user_id: userId, page } });
+
+export const createComment = (data: Partial<Comment>) => 
+  commentApi.post('/comments/', data);
+
+export const updateComment = (id: number, data: Partial<Comment>) => 
+  commentApi.put(`/comments/${id}/`, data);
+
+export const deleteComment = (id: number) => 
+  commentApi.delete(`/comments/${id}/`);

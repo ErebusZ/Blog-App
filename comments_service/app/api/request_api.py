@@ -1,7 +1,7 @@
 import os
 
 from fastapi import Depends, HTTPException
-from fastapi import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import httpx
 
 
@@ -16,7 +16,7 @@ security = HTTPBearer()
 async def validate_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     async with httpx.AsyncClient() as client:
-        response = await client.post(DJANGO_BACKEND_URL, json={"token": token})
+        response = await client.post(AUTH_SERVICE_URL, json={"token": token})
         if response.status_code == 200:
             data = response.json()
             if data["valid"]:

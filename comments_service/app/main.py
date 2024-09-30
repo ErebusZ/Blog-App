@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import db
+from app.api import db, router
 
 db.metadata.create_all(db.engine)
 
@@ -18,6 +18,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(router.comments_router)
 
 
 @app.on_event("startup")

@@ -6,7 +6,6 @@ from rest_framework import exceptions
 from rest_framework_simplejwt import authentication as jwt_auth
 from django.db.models import Q
 from django.core import paginator
-from django.shortcuts import get_object_or_404
 
 
 from articles import models
@@ -27,12 +26,18 @@ class BlogPostView(views.APIView):
 
     def get(self, request, blog_id=None):
         if blog_id is not None:
-            blog_post = get_object_or_404(models.BlogPost, id=blog_id)
-            serializer = serializers.BlogPostSerializer(blog_post)
-            return response.Response(
-                {"data": serializer.data, "message": "Success."},
-                status=status.HTTP_200_OK,
-            )
+            try:
+                blog_post = models.BlogPost.objects.get(id=blog_id)
+                serializer = serializers.BlogPostSerializer(blog_post)
+                return response.Response(
+                    {"data": serializer.data, "message": "Success."},
+                    status=status.HTTP_200_OK,
+                )
+            except exceptions.ObjectDoesNotExist:
+                return response.Response(
+                    {"error": "Blog post not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
         articles = models.BlogPost.objects.all()
         if request.GET.get("search") is not None:

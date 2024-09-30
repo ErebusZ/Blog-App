@@ -6,6 +6,7 @@ from rest_framework import exceptions
 from rest_framework_simplejwt import authentication as jwt_auth
 from django.db.models import Q
 from django.core import paginator
+from django.shortcuts import get_object_or_404
 
 
 from articles import models
@@ -17,20 +18,30 @@ DEFAULT_PAGE = 1
 
 
 class BlogPostView(views.APIView):
-    permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [jwt_auth.JWTAuthentication]
 
-    def get(self, request):
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [permissions.AllowAny]
+        return [permissions.IsAuthenticated()]
+
+    def get(self, request, blog_id=None):
+        if blog_id is not None:
+            blog_post = get_object_or_404(models.BlogPost, id=blog_id)
+            serializer = serializers.BlogPostSerializer(blog_post)
+            return response.Response(
+                {"data": serializer.data, "message": "Success."},
+                status=status.HTTP_200_OK,
+            )
+
         articles = models.BlogPost.objects.all()
         if request.GET.get("search") is not None:
             keyword = request.GET.get("search")
             articles = articles.filter(
                 Q(title__icontains=keyword) | Q(content__icontains=keyword)
             )
-
         page = request.GET.get("page", DEFAULT_PAGE)
         paginator_obj = paginator.Paginator(articles, DEFAULT_PAGINATION)
-
         try:
             page_content = paginator_obj.page(page)
         except paginator.EmptyPage:
@@ -40,9 +51,7 @@ class BlogPostView(views.APIView):
                 {"message": "Invalid page."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         serializer = serializers.BlogPostSerializer(page_content, many=True)
-
         return response.Response(
             {"data": serializer.data, "message": "Success."},
             status=status.HTTP_200_OK,

@@ -3,6 +3,6 @@ uvicorn
 sqlalchemy
 pydantic
 databases[postgresql]
-requests
 PyJWT
 psycopg2-binary
+httpx

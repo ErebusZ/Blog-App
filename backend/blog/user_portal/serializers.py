@@ -10,6 +10,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ["first_name", "last_name", "url", "username", "password", "email"]
 
     def validate(self, data):
+        required_fields = ["username", "email", "password", "first_name", "last_name"]
+        for field in required_fields:
+            if field not in data:
+                raise serializers.ValidationError(f"{field} is required.")
+
         if models.User.objects.filter(username=data["username"]).exists() is True:
             raise serializers.ValidationError("Username already taken.")
         return data
@@ -30,6 +35,11 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(required=True)
 
     def validate(self, data):
+        required_fields = ["username", "password"]
+        for field in required_fields:
+            if field not in data:
+                raise serializers.ValidationError(f"{field} is required.")
+
         if models.User.objects.filter(username=data["username"]).exists() is False:
             raise serializers.ValidationError("Invalid username or password.")
 
@@ -45,6 +55,7 @@ class LoginSerializer(serializers.Serializer):
         return {
             "message": "Success.",
             "data": {
+                "userId": user.id,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             },

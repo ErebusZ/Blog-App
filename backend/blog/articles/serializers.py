@@ -5,4 +5,3 @@ from .models import BlogPost
 class BlogPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogPost
-        exclude = ["created_at", "updated_at"]

@@ -26,19 +26,22 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     const authStore = useAuthStore();
 
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      try {
-        const newTokens = await refreshToken(authStore.refreshToken!);
-        authStore.accessToken = newTokens.access;
-        authStore.refreshToken = newTokens.refresh;
+      if (authStore.refreshToken) {
+        try {
+          const newTokens = await refreshToken(authStore.refreshToken);
+          authStore.accessToken = newTokens.access;
 
-        originalRequest.headers.Authorization = `Bearer ${newTokens.access}`;
-        return axiosInstance(originalRequest);
-      } catch (err) {
-        console.error("Token refresh failed:", err);
-        return Promise.reject(err);
+          originalRequest.headers.Authorization = `Bearer ${newTokens.access}`;
+          return axiosInstance(originalRequest); // Correct way to retry the request
+        } catch (err) {
+          console.error("Token refresh failed:", err);
+          return Promise.reject(err);
+        }
+      } else {
+        return Promise.reject(error);
       }
     }
     return Promise.reject(error);
@@ -46,10 +49,13 @@ axiosInstance.interceptors.response.use(
 );
 
 const refreshToken = async (refreshToken: string) => {
-  const response = await axios.post("/user_portal/refresh/", {
-    token: refreshToken,
-  });
-  return response.data.data;
+  const response = await axios.post(
+    `${process.env.VUE_APP_API_URL}/user_portal/refresh/`,
+    {
+      refresh: refreshToken,
+    }
+  );
+  return response.data; // Ensure this matches your actual API response structure
 };
 
 export default axiosInstance;

@@ -16,7 +16,7 @@
     </div>
     <img
       class="w-full h-60 object-cover mb-4"
-      :src="blog.image"
+      :src="blog.image || 'https://placehold.co/400x250'"
       :alt="blog.title"
     />
     <h1 class="text-3xl font-bold mb-2">{{ blog.title }}</h1>
@@ -30,6 +30,7 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { BlogPost } from "@/types";
+import axiosInstance from "@/axiosInstance";
 
 export default {
   name: "BlogPost",
@@ -41,57 +42,47 @@ export default {
     const blog = ref<BlogPost>({
       id: 0,
       title: "",
-      author: "",
       content: "",
       image: "",
       userId: 0,
     });
+
     const isOwner = ref(false);
 
-    onMounted(() => {
+    onMounted(async () => {
       const blogId = route.params.id;
-      const blogs: BlogPost[] = [
-        {
-          id: 1,
-          title: "First Blog Post",
-          author: "Author One",
-          content: "content 1",
-          image: "https://via.placeholder.com/400x250",
-          userId: 1,
-        },
-        {
-          id: 2,
-          title: "Second Blog Post",
-          author: "Author Two",
-          content: "content 2",
-          image: "https://via.placeholder.com/400x250",
-          userId: 2,
-        },
-        {
-          id: 3,
-          title: "Third Blog Post",
-          author: "Author Three",
-          content: "contetn 3",
-          image: "https://via.placeholder.com/400x250",
-          userId: 3,
-        },
-      ];
 
-      const selectedBlog = blogs.find((blog) => blog.id === Number(blogId));
+      try {
+        const response = await axiosInstance.get(
+          `${process.env.VUE_APP_API_URL}/articles/blog/${blogId}`
+        );
 
-      console.log("Logged-in user:", authStore.user);
+        blog.value = response.data.data;
 
-      if (selectedBlog) {
-        blog.value = selectedBlog;
-        isOwner.value = authStore.user?.id === blog.value.userId;
-      } else {
+        console.log("Logged-in user:", authStore.user);
+
+        console.log("logged user" + blog.value.userId);
+        isOwner.value = !!(
+          authStore.user && authStore.user.id === blog.value.author
+        );
+      } catch (error) {
+        console.error("Error fetching blog post:", error);
         router.replace({ name: "NotFound" });
       }
     });
 
     const deleteBlog = async () => {
-      console.log("Deleting blog post with ID:", blog.value.id);
-      await router.push({ name: "Home" });
+      if (!blog.value.id) return;
+      const blogId = route.params.id;
+      try {
+        await axiosInstance.delete(
+          `${process.env.VUE_APP_API_URL}/articles/blog/${blogId}`
+        );
+        console.log("Blog deleted successfully.");
+        await router.push({ name: "Home" });
+      } catch (err) {
+        console.error("Deletion failed:", err);
+      }
     };
 
     return { blog, isOwner, deleteBlog };

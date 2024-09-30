@@ -15,33 +15,13 @@
         />
       </div>
       <div class="mb-4">
-        <label for="author" class="block text-gray-700">Author</label>
-        <input
-          type="text"
-          id="author"
-          v-model="blog.author"
-          class="mt-1 block w-full p-2 border rounded"
-          required
-        />
-      </div>
-      <div class="mb-4">
-        <label for="content" class="block text-gray-700">content</label>
+        <label for="description" class="block text-gray-700">Description</label>
         <textarea
-          id="content"
+          id="description"
           v-model="blog.content"
           class="mt-1 block w-full p-2 border rounded"
           required
         ></textarea>
-      </div>
-      <div class="mb-4">
-        <label for="image" class="block text-gray-700">Image URL</label>
-        <input
-          type="text"
-          id="image"
-          v-model="blog.image"
-          class="mt-1 block w-full p-2 border rounded"
-          required
-        />
       </div>
       <div class="flex justify-between">
         <button
@@ -59,12 +39,13 @@
           Delete
         </button>
       </div>
+      <div v-if="error" class="text-red-500 mt-2">{{ error }}</div>
     </form>
   </div>
 </template>
 
 <script lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { BlogPost } from "@/types";
@@ -80,63 +61,62 @@ export default {
     const blog = ref<BlogPost>({
       id: 0,
       title: "",
-      author: "",
       content: "",
       image: "",
       userId: 0,
     });
 
-    const isOwner = computed(() => {
-      return authStore.user?.id === blog.value.userId;
-    });
+    const error = ref("");
 
     onMounted(async () => {
       const blogId = route.params.id;
       if (blogId) {
-        const response = await axiosInstance.get(
-          `/your_api_endpoint_to_get_blog/${blogId}/`
-        );
-        blog.value = response.data;
+        try {
+          const response = await axiosInstance.get(
+            `${process.env.VUE_APP_API_URL}/articles/blog/${blogId}`
+          );
+          blog.value = response.data.data;
+        } catch (error) {
+          console.error("Error fetching blog post:", error);
+          router.replace({ name: "NotFound" });
+        }
       }
     });
 
     const updateBlog = async () => {
       try {
-        const response = await axiosInstance.put(
-          `/your_api_endpoint_to_update/${blog.value.id}/`,
+        const response = await axiosInstance.patch(
+          `${process.env.VUE_APP_API_URL}/articles/blog/${blog.value.id}`,
           {
             title: blog.value.title,
-            author: blog.value.author,
             content: blog.value.content,
-            image: blog.value.image,
           }
         );
         console.log("Blog updated successfully:", response.data);
         await router.push({ name: "BlogPost", params: { id: blog.value.id } });
       } catch (err) {
         console.error("Update failed:", err);
+        error.value = "Failed to update the blog post.";
       }
     };
 
     const createBlog = async () => {
       try {
         const response = await axiosInstance.post(
-          "${process.env.VUE_APP_API_URL}/user_portal/login/",
+          `${process.env.VUE_APP_API_URL}/articles/blog/`,
           {
             title: blog.value.title,
-            author: blog.value.author,
             content: blog.value.content,
-            image: blog.value.image,
-            userId: authStore.user?.id,
           }
         );
         console.log("Blog created successfully:", response.data);
         await router.push({
           name: "BlogPost",
-          params: { id: response.data.id },
+          params: { id: response.data.data.id },
         });
       } catch (err) {
         console.error("Creation failed:", err);
+        error.value = "Failed to create the blog post.";
       }
     };
 
@@ -144,16 +124,17 @@ export default {
       if (!blog.value.id) return;
       try {
         await axiosInstance.delete(
-          `/your_api_endpoint_to_delete/${blog.value.id}/`
+          `${process.env.VUE_APP_API_URL}/articles/blog/${blog.value.id}`
         );
         console.log("Blog deleted successfully.");
         await router.push({ name: "Home" });
       } catch (err) {
         console.error("Deletion failed:", err);
+        error.value = "Failed to delete the blog post.";
       }
     };
 
-    return { blog, isOwner, updateBlog, createBlog, deleteBlog };
+    return { blog, updateBlog, createBlog, deleteBlog, error };
   },
 };
 </script>

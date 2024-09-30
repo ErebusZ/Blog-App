@@ -1,27 +1,30 @@
 <template>
   <div class="flex flex-col items-center justify-center h-auto p-4">
-    <div class="w-full max-w-4xl">
+    <template v-if="isAuthenticated">
+      <router-link to="/create">
+        <button class="bg-blue-500 text-white p-2 w-full rounded">
+          create new blog
+        </button>
+      </router-link>
+    </template>
+    <div class="w-full max-w-4xl" v-if="blogs.length > 0">
       <div
         v-for="blog in paginatedBlogs"
         :key="blog.id"
         class="flex bg-white rounded-lg shadow-md overflow-hidden mb-6"
       >
-        <img
-          class="w-64 h-40 object-cover"
-          :src="blog.image"
-          :alt="blog.title"
-        />
-        <div class="p-4 flex flex-col justify-between w-full">
-          <h2 class="text-xl font-semibold mb-1">{{ blog.title }}</h2>
-          <p class="text-gray-600 mb-1">by {{ blog.author }}</p>
-          <p class="mt-2 text-gray-800">{{ blog.content }}</p>
-          <router-link
-            :to="{ name: 'BlogPost', params: { id: blog.id } }"
-            class="mt-2 text-blue-500 hover:underline"
-          >
-            Read More
-          </router-link>
-        </div>
+        <router-link :to="`/blog/${blog.id}`">
+          <img
+            class="w-64 h-40 object-cover"
+            :src="blog.image || 'https://placehold.co/600x400'"
+            :alt="blog.title"
+          />
+          <div class="p-4 flex flex-col justify-between w-full">
+            <h2 class="text-xl font-semibold mb-1">{{ blog.title }}</h2>
+            <p class="text-gray-600 mb-1">by {{ blog.author }}</p>
+            <p class="mt-2 text-gray-800">{{ blog.description }}</p>
+          </div>
+        </router-link>
       </div>
       <Pagination
         :currentPage="currentPage"
@@ -29,12 +32,18 @@
         @update:currentPage="currentPage = $event"
       />
     </div>
+    <div v-else>
+      <p class="text-gray-600">Loading blogs...</p>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, ref } from "vue";
+import { ref, computed, onMounted } from "vue";
+import axiosInstance from "@/axiosInstance"; // Import your axios instance
 import Pagination from "@/components/Pagination.vue";
+import axios from "axios";
+import { useAuthStore } from "@/stores/auth";
 
 export default {
   name: "HomeView",
@@ -42,46 +51,11 @@ export default {
     Pagination,
   },
   setup() {
-    const blogs = ref([
-      {
-        id: 1,
-        title: "First Blog Post",
-        author: "Author One",
-        content: "This is a brief content of the first blog post.",
-        image: "https://via.placeholder.com/400x250",
-      },
-      {
-        id: 2,
-        title: "Second Blog Post",
-        author: "Author Two",
-        content: "This is a brief content of the second blog post.",
-        image: "https://via.placeholder.com/400x250",
-      },
-      {
-        id: 3,
-        title: "Third Blog Post",
-        author: "Author Three",
-        content: "This is a brief content of the third blog post.",
-        image: "https://via.placeholder.com/400x250",
-      },
-      {
-        id: 4,
-        title: "Fourth Blog Post",
-        author: "Author Four",
-        content: "This is a brief content of the fourth blog post.",
-        image: "https://via.placeholder.com/400x250",
-      },
-      {
-        id: 5,
-        title: "Fifth Blog Post",
-        author: "Author Five",
-        content: "This is a brief content of the fifth blog post.",
-        image: "https://via.placeholder.com/400x250",
-      },
-    ]);
-
-    const itemsPerPage = 2;
+    const blogs = ref([]);
+    const itemsPerPage = 5;
     const currentPage = ref(1);
+    const error = ref("");
+    const isAuthenticated = computed(() => useAuthStore().isAuthenticated);
 
     const totalPages = computed(() => {
       return Math.ceil(blogs.value.length / itemsPerPage);
@@ -93,7 +67,30 @@ export default {
       return blogs.value.slice(start, end);
     });
 
-    return { blogs, currentPage, totalPages, paginatedBlogs };
+    const fetchBlogs = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_URL}/articles/blog/`
+        );
+        blogs.value = response.data.data;
+      } catch (err) {
+        console.error("Error fetching blogs:", err);
+        error.value = "Failed to load blog posts.";
+        blogs.value = [];
+      }
+    };
+
+    onMounted(fetchBlogs);
+    console.log("Blogs after fetch:", blogs.value);
+
+    return {
+      blogs,
+      currentPage,
+      totalPages,
+      paginatedBlogs,
+      error,
+      isAuthenticated,
+    };
   },
 };
 </script>

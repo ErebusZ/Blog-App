@@ -22,7 +22,7 @@ class BlogPostView(views.APIView):
 
     def get_permissions(self):
         if self.request.method == "GET":
-            return [permissions.AllowAny]
+            return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
     def get(self, request, blog_id=None):

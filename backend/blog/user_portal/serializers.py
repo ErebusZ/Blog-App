@@ -55,6 +55,7 @@ class LoginSerializer(serializers.Serializer):
         return {
             "message": "Success.",
             "data": {
+                "userId": user.id,
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             },

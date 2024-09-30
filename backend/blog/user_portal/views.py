@@ -3,6 +3,8 @@ from rest_framework import response
 from rest_framework import views
 from rest_framework import generics
 from rest_framework import exceptions
+from rest_framework_simplejwt import tokens
+from rest_framework_simplejwt import exceptions as jwt_exceptions
 
 
 from user_portal import serializers
@@ -44,3 +46,27 @@ class LoginView(generics.GenericAPIView):
             auth_response,
             status=status.HTTP_200_OK,
         )
+
+    class ValidateTokenView(views.APIView):
+        def post(self, request):
+            token = request.data.get("token")
+
+            if token is None:
+                return response.Response(
+                    {"valid": False, "error": "No token provided"}, status=400
+                )
+
+            try:
+                token_obj = tokens.AccessToken(token)
+                user = token_obj.payload.get("user_id")
+
+                return response.Response(
+                    {
+                        "valid": True,
+                        "user_id": user,
+                    }
+                )
+            except jwt_exceptions.TokenError:
+                return response.Response(
+                    {"valid": False, "error": "Invalid token"}, status=401
+                )

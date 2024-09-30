@@ -1,9 +1,9 @@
 export interface BlogPost {
   id: number;
   title: string;
-  author: string;
+  author?: number;
   content: string;
-  image: string;
+  image?: string;
   userId: number;
 }
 

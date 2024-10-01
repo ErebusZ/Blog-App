@@ -47,26 +47,29 @@ class LoginView(generics.GenericAPIView):
             status=status.HTTP_200_OK,
         )
 
-    class ValidateTokenView(views.APIView):
-        def post(self, request):
-            token = request.data.get("token")
+class ValidateTokenView(views.APIView):
+    def post(self, request):
+        token = request.data.get("token")
 
-            if token is None:
-                return response.Response(
-                    {"valid": False, "error": "No token provided"}, status=400
-                )
+        print("here comes the token :", token)
+        if token is None:
+            return response.Response(
+                {"valid": False, "error": "No token provided"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
-            try:
-                token_obj = tokens.AccessToken(token)
-                user = token_obj.payload.get("user_id")
+        try:
+            token_obj = tokens.AccessToken(token)
+            user = token_obj.payload.get("user_id")
 
-                return response.Response(
-                    {
-                        "valid": True,
-                        "user_id": user,
-                    }
-                )
-            except jwt_exceptions.TokenError:
-                return response.Response(
-                    {"valid": False, "error": "Invalid token"}, status=401
-                )
+            return response.Response(
+                {
+                    "valid": True,
+                    "user_id": user,
+                    "status_code": status.HTTP_200_OK,
+                },
+                status=status.HTTP_200_OK
+            )
+        except jwt_exceptions.TokenError:
+            return response.Response(
+                {"valid": False, "error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED
+            )

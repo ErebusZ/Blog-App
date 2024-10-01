@@ -54,6 +54,8 @@ services:
       DB_PASS: ${COMMENTS_DB_PASSWORD}
       DB_HOST: comments_db
       DB_PORT: 5432
+      AUTH_HOST: http://backend:8000/user_portal/validate_token/
+
 
   blog_frontend:
     build:

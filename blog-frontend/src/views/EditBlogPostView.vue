@@ -15,7 +15,7 @@
         />
       </div>
       <div class="mb-4">
-        <label for="description" class="block text-gray-700">Description</label>
+        <label for="description" class="block text-gray-700">Content</label>
         <textarea
           id="description"
           v-model="blog.content"

@@ -22,6 +22,7 @@
     <h1 class="text-3xl font-bold mb-2">{{ blog.title }}</h1>
     <p class="text-gray-600 mb-4">by {{ blog.author }}</p>
     <p class="text-gray-800">{{ blog.content }}</p>
+    <Comments v-if="blogLoaded" :blogId="blog.id" />
   </div>
 </template>
 
@@ -31,9 +32,12 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { BlogPost } from "@/types";
 import axiosInstance from "@/axiosInstance";
+import Comments from "@/components/Comments.vue";
+import axios from "axios";
 
 export default {
   name: "BlogPost",
+  components: { Comments },
   setup() {
     const route = useRoute();
     const router = useRouter();
@@ -48,26 +52,25 @@ export default {
     });
 
     const isOwner = ref(false);
+    const blogLoaded = ref(false);
 
     onMounted(async () => {
       const blogId = route.params.id;
 
       try {
-        const response = await axiosInstance.get(
+        const response = await axios.get(
           `${process.env.VUE_APP_API_URL}/articles/blog/${blogId}`
         );
 
         blog.value = response.data.data;
-
-        console.log("Logged-in user:", authStore.user);
-
-        console.log("logged user" + blog.value.userId);
         isOwner.value = !!(
-          authStore.user && authStore.user.id === blog.value.author
+          authStore.user && authStore.user.id === blog.value.userId
         );
+
+        blogLoaded.value = true;
       } catch (error) {
         console.error("Error fetching blog post:", error);
-        router.replace({ name: "NotFound" });
+        await router.replace({ name: "NotFound" });
       }
     });
 
@@ -85,7 +88,7 @@ export default {
       }
     };
 
-    return { blog, isOwner, deleteBlog };
+    return { blog, isOwner, deleteBlog, blogLoaded };
   },
 };
 </script>

@@ -32,10 +32,11 @@ axiosInstance.interceptors.response.use(
       if (authStore.refreshToken) {
         try {
           const newTokens = await refreshToken(authStore.refreshToken);
+          console.log(newTokens);
           authStore.accessToken = newTokens.access;
 
           originalRequest.headers.Authorization = `Bearer ${newTokens.access}`;
-          return axiosInstance(originalRequest); // Correct way to retry the request
+          return axiosInstance(originalRequest);
         } catch (err) {
           console.error("Token refresh failed:", err);
           return Promise.reject(err);

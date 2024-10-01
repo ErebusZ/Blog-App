@@ -7,8 +7,8 @@ import {
 import Home from "../views/HomeView.vue";
 import Login from "../views/LoginView.vue";
 import Register from "../views/RegisterView.vue";
-import NotFoundView from "@/views/NotFoundView.vue";
 import BlogPostView from "@/views/BlogPostView.vue";
+import NotFoundView from "@/views/NotFoundView.vue";
 import EditBlogPostView from "@/views/EditBlogPostView.vue";
 import { useAuthStore } from "@/stores/auth";
 
@@ -30,7 +30,7 @@ const routes = [
       if (authStore.isAuthenticated) {
         next();
       } else {
-        next({ name: "Login" });
+        next({ name: "Login" }); // Redirect to the login page
       }
     },
   },
@@ -47,11 +47,11 @@ const routes = [
       if (authStore.isAuthenticated) {
         next();
       } else {
-        next({ name: "Login" });
+        next({ name: "Login" }); // Redirect to the login page
       }
     },
   },
-  { path: "/:pathMatch(.*)*", component: NotFoundView },
+  { path: "/:pathMatch(.*)*", component: NotFoundView, name: "NotFound" },
 ];
 
 const router = createRouter({

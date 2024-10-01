@@ -3,7 +3,7 @@
     <template v-if="isAuthenticated">
       <router-link to="/create">
         <button class="bg-blue-500 text-white p-2 w-full rounded">
-          create new blog
+          Create New Blog
         </button>
       </router-link>
     </template>
@@ -13,16 +13,18 @@
         :key="blog.id"
         class="flex bg-white rounded-lg shadow-md overflow-hidden mb-6"
       >
-        <router-link :to="`/blog/${blog.id}`">
+        <router-link :to="`/blog/${blog.id}`" class="flex w-full">
           <img
-            class="w-64 h-40 object-cover"
+            class="w-1/3 h-full object-cover"
             :src="blog.image || 'https://placehold.co/600x400'"
             :alt="blog.title"
           />
-          <div class="p-4 flex flex-col justify-between w-full">
-            <h2 class="text-xl font-semibold mb-1">{{ blog.title }}</h2>
+          <div class="p-4 flex flex-col justify-between w-2/3">
+            <h2 class="text-xl font-semibold mb-0.5">{{ blog.title }}</h2>
             <p class="text-gray-600 mb-1">by {{ blog.author }}</p>
-            <p class="mt-2 text-gray-800">{{ blog.description }}</p>
+            <p class="mt-1 text-gray-800">
+              {{ truncatedContent(blog.content) }}
+            </p>
           </div>
         </router-link>
       </div>
@@ -40,7 +42,7 @@
 
 <script lang="ts">
 import { ref, computed, onMounted } from "vue";
-import axiosInstance from "@/axiosInstance"; // Import your axios instance
+import axiosInstance from "@/axiosInstance";
 import Pagination from "@/components/Pagination.vue";
 import axios from "axios";
 import { useAuthStore } from "@/stores/auth";
@@ -81,7 +83,13 @@ export default {
     };
 
     onMounted(fetchBlogs);
-    console.log("Blogs after fetch:", blogs.value);
+
+    const truncatedContent = (content: string): string => {
+      const maxLength = 250;
+      return content.length > maxLength
+        ? content.slice(0, maxLength) + "..."
+        : content;
+    };
 
     return {
       blogs,
@@ -90,6 +98,7 @@ export default {
       paginatedBlogs,
       error,
       isAuthenticated,
+      truncatedContent,
     };
   },
 };

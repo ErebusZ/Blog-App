@@ -1,60 +1,62 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import type {RouteRecordRaw } from 'vue-router';
-import Home from '@/views/HomeView.vue';
-import Register from '@/views/RegisterView.vue';
-import Login from '@/views/LoginView.vue';
-import BlogPost from '@/views/BlogPostView.vue';
-import CreateEditPost from '@/views/CreateEditPostView.vue';
-import { useAuthStore } from '@/stores/auth';
+import {
+  createRouter,
+  createWebHistory,
+  RouteLocationNormalized,
+  NavigationGuardNext,
+} from "vue-router";
+import Home from "../views/HomeView.vue";
+import Login from "../views/LoginView.vue";
+import Register from "../views/RegisterView.vue";
+import BlogPostView from "@/views/BlogPostView.vue";
+import NotFoundView from "@/views/NotFoundView.vue";
+import EditBlogPostView from "@/views/EditBlogPostView.vue";
+import { useAuthStore } from "@/stores/auth";
 
-
-const routes: Array<RouteRecordRaw> = [
+const routes = [
+  { path: "/", component: Home, name: "Home" },
+  { path: "/login", component: Login },
+  { path: "/register", component: Register },
+  { path: "/blog/:id", component: BlogPostView, name: "BlogPost" },
   {
-    path: '/',
-    name: 'Home',
-    component: Home,
+    path: "/edit/:id",
+    name: "EditBlogPost",
+    component: EditBlogPostView,
+    beforeEnter: (
+      to: RouteLocationNormalized,
+      from: RouteLocationNormalized,
+      next: NavigationGuardNext
+    ) => {
+      const authStore = useAuthStore();
+      if (authStore.isAuthenticated) {
+        next();
+      } else {
+        next({ name: "Login" }); // Redirect to the login page
+      }
+    },
   },
   {
-    path: '/register',
-    name: 'Register',
-    component: Register,
+    path: "/create",
+    name: "CreateBlogPost",
+    component: EditBlogPostView,
+    beforeEnter: (
+      to: RouteLocationNormalized,
+      from: RouteLocationNormalized,
+      next: NavigationGuardNext
+    ) => {
+      const authStore = useAuthStore();
+      if (authStore.isAuthenticated) {
+        next();
+      } else {
+        next({ name: "Login" }); // Redirect to the login page
+      }
+    },
   },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login,
-  },
-  {
-    path: '/post/:id',
-    name: 'BlogPost',
-    component: BlogPost,
-  },
-  {
-    path: '/create',
-    name: 'CreatePost',
-    component: CreateEditPost,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/edit/:id',
-    name: 'EditPost',
-    component: CreateEditPost,
-    meta: { requiresAuth: true },
-  },
+  { path: "/:pathMatch(.*)*", component: NotFoundView, name: "NotFound" },
 ];
 
 const router = createRouter({
-  history: createWebHistory("/"),
-  routes : routes,
-});
-
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-  if (to.matched.some(record => record.meta.requiresAuth) && !authStore.isAuthenticated()) {
-    next({ name: 'Login' });
-  } else {
-    next();
-  }
+  history: createWebHistory(process.env.BASE_URL),
+  routes,
 });
 
 export default router;

@@ -15,6 +15,7 @@ class CommentIn(BaseModel):
 
 class CommentOut(CommentIn):
     id: int
+    user_id: int
 
 
 class CommentUpdate(CommentIn):

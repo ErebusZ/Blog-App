@@ -1,72 +1,107 @@
 <template>
-  <div class="register">
-    <h2>Register</h2>
-    <form @submit.prevent="handleSubmit">
-      <div>
-        <label for="firstName">Fist Name:</label>
-        <input v-model="password" id="firstName" type="text" required />
-      </div>
-      <div>
-        <label for="lastName">Last Name:</label>
-        <input v-model="password" id="lastName" type="text" required />
-      </div>
-      <div>
-        <label for="username">Username:</label>
-        <input v-model="username" id="username" type="text" required />
-      </div>
-      <div>
-        <label for="email">Email:</label>
-        <input v-model="email" id="email" type="email" required />
-      </div>
-      <div>
-        <label for="password">Password:</label>
-        <input v-model="password" id="password" type="password" required />
-      </div>
-      <button type="submit">Register</button>
+  <div class="flex flex-col items-center justify-center h-screen">
+    <h1 class="text-3xl font-bold mb-4">Register Page</h1>
+    <form
+      @submit.prevent="registerUser"
+      class="bg-white p-6 rounded shadow-md w-80"
+    >
+      <input
+        type="text"
+        v-model="firstName"
+        placeholder="First Name"
+        required
+        class="border p-2 mb-4 w-full"
+      />
+      <input
+        type="text"
+        v-model="lastName"
+        placeholder="Last Name"
+        required
+        class="border p-2 mb-4 w-full"
+      />
+      <input
+        type="email"
+        v-model="email"
+        placeholder="Email"
+        required
+        class="border p-2 mb-4 w-full"
+      />
+      <input
+        type="text"
+        v-model="username"
+        placeholder="Username"
+        required
+        class="border p-2 mb-4 w-full"
+      />
+      <input
+        type="password"
+        v-model="password"
+        placeholder="Password"
+        required
+        class="border p-2 mb-4 w-full"
+      />
+      <button type="submit" class="bg-blue-500 text-white p-2 w-full rounded">
+        Register
+      </button>
+      <div v-if="error" class="text-red-500 mt-2">{{ error }}</div>
     </form>
-    <p v-if="error">{{ error }}</p>
-    <p>Already have an account? <router-link to="/login">Log in here</router-link></p>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { ref } from "vue";
+import axios, { AxiosError } from "axios";
 
-export default defineComponent({
-  name: 'Register',
+export default {
+  name: "RegisterView",
   setup() {
-    const router = useRouter();
-    const authStore = useAuthStore();
+    const firstName = ref("");
+    const lastName = ref("");
+    const email = ref("");
+    const username = ref("");
+    const password = ref("");
+    const error = ref("");
 
-    const firstName = ref('');
-    const lastName = ref('');
-    const username = ref('');
-    const email = ref('');
-    const password = ref('');
-    const error = ref('');
-
-    const handleSubmit = async () => {
+    const registerUser = async () => {
       try {
-        const success = await authStore.registerUser(username.value, email.value, password.value, firstName.value, lastName.value);
-        if (success) {
-          router.push('/');
+        const response = await axios.post(
+          `${process.env.VUE_APP_API_URL}/user_portal/signup/`,
+          {
+            first_name: firstName.value,
+            last_name: lastName.value,
+            email: email.value,
+            username: username.value,
+            password: password.value,
+          }
+        );
+
+        console.log("Registration successful:", response.data);
+      } catch (err) {
+        const errorResponse = err as AxiosError;
+
+        if (errorResponse.response && errorResponse.response.data) {
+          error.value =
+            (errorResponse.response.data as any).error ||
+            "Registration failed. Please check your input.";
         } else {
-          error.value = 'Registration failed. Please try again.';
+          error.value = "Registration failed. Please check your input.";
         }
-      } catch (e) {
-        error.value = 'An error occurred during registration.';
+
+        console.error(errorResponse);
       }
     };
 
     return {
-      username,
+      firstName,
+      lastName,
       email,
+      username,
       password,
+      registerUser,
       error,
-      handleSubmit,
     };
   },
-});
+};
 </script>
+
+<style scoped></style>

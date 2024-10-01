@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework import response
@@ -22,17 +23,23 @@ class BlogPostView(views.APIView):
 
     def get_permissions(self):
         if self.request.method == "GET":
-            return [permissions.AllowAny]
+            return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
     def get(self, request, blog_id=None):
         if blog_id is not None:
-            blog_post = get_object_or_404(models.BlogPost, id=blog_id)
-            serializer = serializers.BlogPostSerializer(blog_post)
-            return response.Response(
-                {"data": serializer.data, "message": "Success."},
-                status=status.HTTP_200_OK,
-            )
+            try:
+                blog_post = models.BlogPost.objects.get(id=blog_id)
+                serializer = serializers.BlogPostSerializer(blog_post)
+                return response.Response(
+                    {"data": serializer.data, "message": "Success."},
+                    status=status.HTTP_200_OK,
+                )
+            except ObjectDoesNotExist:
+                return response.Response(
+                    {"error": "Blog post not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
         articles = models.BlogPost.objects.all()
         if request.GET.get("search") is not None:
@@ -77,11 +84,10 @@ class BlogPostView(views.APIView):
         except exceptions.ValidationError as e:
             return response.Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, request):
+    def patch(self, request, blog_id=None):
         try:
             data = request.data.copy()
-            article_id = data.get("id")
-            article = models.BlogPost.objects.filter(id=article_id)
+            article = models.BlogPost.objects.filter(id=blog_id)
             if article.exists() is False:
                 return response.Response(
                     {"message": "Article not found."}, status=status.HTTP_404_NOT_FOUND
@@ -110,11 +116,10 @@ class BlogPostView(views.APIView):
         except exceptions.ValidationError as e:
             return response.Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request):
+    def delete(self, request, blog_id=None):
         try:
             data = request.data.copy()
-            article_id = data.get("id")
-            article = models.BlogPost.objects.filter(id=article_id)
+            article = models.BlogPost.objects.filter(id=blog_id)
             if article.exists() is False:
                 return response.Response(
                     {"message": "Article not found."}, status=status.HTTP_404_NOT_FOUND
